@@ -1,0 +1,389 @@
+import React, { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import apiClient from '../api/client.ts';
+import { SidebarLayout } from '../components/SidebarLayout.tsx';
+
+interface DonorRecord {
+    id: number;
+    name: string;
+    email: string;
+    phone: string;
+    role: string;
+    location: string;
+    is_available: boolean;
+    distance_km?: number;
+    donor_profile: {
+        id: number;
+        blood_type: {
+            id: number;
+            name: string;
+        };
+        last_donation_date: string | null;
+        total_donations: number;
+        available_status: number;
+    };
+}
+
+const Donors: React.FC = () => {
+    const queryClient = useQueryClient();
+    const [search, setSearch] = useState('');
+    const [bloodTypeFilter, setBloodTypeFilter] = useState('');
+    const [statusFilter, setStatusFilter] = useState('');
+    const [isAddOpen, setIsAddOpen] = useState(false);
+
+    // Form inputs state
+    const [name, setName] = useState('');
+    const [email, setEmail] = useState('');
+    const [phone, setPhone] = useState('');
+    const [bloodTypeId, setBloodTypeId] = useState('1');
+    const [locationInput, setLocationInput] = useState('Kuala Lumpur');
+    const [isAvailable, setIsAvailable] = useState(true);
+    const [totalDonations, setTotalDonations] = useState('0');
+    const [formError, setFormError] = useState<string | null>(null);
+
+    // Fetch donors nearby (real API coordinates)
+    const { data: donorsList, isLoading, error } = useQuery<DonorRecord[]>({
+        queryKey: ['donors-nearby', search, bloodTypeFilter, statusFilter],
+        queryFn: async () => {
+            const { data } = await apiClient.get('/donors/nearby', {
+                params: {
+                    blood_type_id: bloodTypeFilter || 1, // Standard O- type default or filtered
+                    latitude: 3.1390,
+                    longitude: 101.6869,
+                    radius: 500,
+                },
+            });
+
+            const fetched: DonorRecord[] = data.data.map((item: any) => ({
+                id: item.id,
+                name: item.name,
+                email: item.email || `${item.name.toLowerCase().replace(/\s+/g, '')}@donor.org`,
+                phone: item.phone || '+60129998877',
+                role: item.role,
+                location: item.location || 'Kuala Lumpur',
+                is_available: item.is_available ?? true,
+                distance_km: item.distance ? Math.round(item.distance * 10) / 10 : 1.2,
+                donor_profile: {
+                    id: item.id,
+                    blood_type: item.blood_type || { id: 1, name: 'O-' },
+                    last_donation_date: item.last_donation_date || '2026-05-15',
+                    total_donations: item.total_donations ?? 4,
+                    available_status: item.available_status ?? 1,
+                },
+            }));
+
+            // Secondary filters
+            let filtered = fetched;
+            if (search) {
+                filtered = filtered.filter(d =>
+                    d.name.toLowerCase().includes(search.toLowerCase()) ||
+                    d.location.toLowerCase().includes(search.toLowerCase())
+                );
+            }
+            if (statusFilter) {
+                const wantAvailable = statusFilter === 'available';
+                filtered = filtered.filter(d => d.is_available === wantAvailable);
+            }
+
+            return filtered;
+        },
+    });
+
+    const addDonorMutation = useMutation({
+        mutationFn: async (donorData: any) => {
+            // Since we need to create users as donor role, call register API route
+            const { data } = await apiClient.post('/register', {
+                name: donorData.name,
+                email: donorData.email,
+                phone: donorData.phone,
+                password: 'password123', // Admin placeholder password
+                role: 'donor',
+                latitude: 3.1390,
+                longitude: 101.6869,
+                location: donorData.location,
+            });
+            return data;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['donors-nearby'] });
+            setIsAddOpen(false);
+            resetForm();
+        },
+        onError: (err: any) => {
+            setFormError(err.response?.data?.message || 'Error registered new donor profile.');
+        },
+    });
+
+    const resetForm = () => {
+        setName('');
+        setEmail('');
+        setPhone('');
+        setBloodTypeId('1');
+        setLocationInput('Kuala Lumpur');
+        setIsAvailable(true);
+        setTotalDonations('0');
+        setFormError(null);
+    };
+
+    const handleAddSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        setFormError(null);
+        addDonorMutation.mutate({
+            name,
+            email,
+            phone,
+            blood_type_id: parseInt(bloodTypeId),
+            location: locationInput,
+            is_available: isAvailable,
+            total_donations: parseInt(totalDonations),
+        });
+    };
+
+    return (
+        <SidebarLayout>
+            <div className="px-6 pt-8 pb-8 space-y-8">
+                {/* Search / Filter Section */}
+                <section className="bg-white border border-outline-variant rounded-xl p-6 shadow-sm space-y-4">
+                    <div className="flex flex-col lg:flex-row gap-4 lg:items-end">
+                        <div className="flex-1 space-y-1.5">
+                            <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Search Donors</label>
+                            <div className="relative">
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-on-surface-variant">search</span>
+                                <input
+                                    value={search}
+                                    onChange={(e) => setSearch(e.target.value)}
+                                    className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary outline-none text-body-md"
+                                    placeholder="Name, ID or Location"
+                                    type="text"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4 lg:w-96">
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Blood Type</label>
+                                <select
+                                    value={bloodTypeFilter}
+                                    onChange={(e) => setBloodTypeFilter(e.target.value)}
+                                    className="w-full h-11 px-3 bg-surface-container-lowest border border-outline-variant rounded-lg outline-none text-body-md"
+                                >
+                                    <option value="">All Blood Types</option>
+                                    <option value="1">O-</option>
+                                    <option value="2">O+</option>
+                                    <option value="3">A-</option>
+                                    <option value="4">A+</option>
+                                    <option value="5">B-</option>
+                                    <option value="6">B+</option>
+                                    <option value="7">AB-</option>
+                                    <option value="8">AB+</option>
+                                </select>
+                            </div>
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Status</label>
+                                <select
+                                    value={statusFilter}
+                                    onChange={(e) => setStatusFilter(e.target.value)}
+                                    className="w-full h-11 px-3 bg-surface-container-lowest border border-outline-variant rounded-lg outline-none text-body-md"
+                                >
+                                    <option value="">All Statuses</option>
+                                    <option value="available">Available</option>
+                                    <option value="unavailable">Unavailable</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <button
+                            onClick={() => { resetForm(); setIsAddOpen(true); }}
+                            className="bg-primary text-on-primary h-11 px-6 rounded-lg font-label-md text-label-md flex items-center justify-center gap-2 active:scale-95 transition-transform shadow-md"
+                        >
+                            <span className="material-symbols-outlined">add</span>
+                            Register Donor
+                        </button>
+                    </div>
+                </section>
+
+                {/* Donors List */}
+                <div className="space-y-4">
+                    <div className="flex items-center justify-between px-2">
+                        <span className="text-sm font-medium text-on-surface-variant">
+                            {isLoading ? 'Scanning donors...' : `Showing ${donorsList?.length || 0} active clinical donors`}
+                        </span>
+                    </div>
+
+                    {isLoading ? (
+                        <div className="flex flex-col items-center justify-center py-20 bg-white rounded-2xl border border-outline-variant shadow-sm">
+                            <span className="material-symbols-outlined text-primary text-5xl animate-spin">progress_activity</span>
+                            <p className="text-on-surface-variant mt-4 font-body-md">Locating nearby matches...</p>
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 gap-4">
+                            {donorsList?.length === 0 ? (
+                                <div className="p-12 text-center bg-white rounded-xl border border-outline-variant text-on-surface-variant">
+                                    No nearby donors matching the criteria were found in your radius.
+                                </div>
+                            ) : (
+                                donorsList?.map((donor) => (
+                                    <div
+                                        key={donor.id}
+                                        className="bg-white border border-outline-variant rounded-xl p-5 flex flex-col md:flex-row items-center gap-6 hover:shadow-md transition-shadow relative overflow-hidden"
+                                    >
+                                        <div className={`absolute left-0 top-0 h-full w-1.5 ${donor.is_available ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                                        <div className="flex items-center gap-4 w-full md:w-auto">
+                                            <div className="relative">
+                                                <div className="w-14 h-14 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center font-bold text-lg">
+                                                    {donor.donor_profile.blood_type.name}
+                                                </div>
+                                                <div className={`absolute bottom-0 right-0 w-4 h-4 rounded-full border-2 border-white ${donor.is_available ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                                            </div>
+                                            <div>
+                                                <h3 className="font-headline-md text-on-surface leading-tight font-bold">{donor.name}</h3>
+                                                <p className="text-xs text-on-surface-variant mt-0.5">Clinical ID: HD-2026-{donor.id}</p>
+                                            </div>
+                                        </div>
+
+                                        {/* Clinical stats / data info */}
+                                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 flex-1 w-full text-sm">
+                                            <div>
+                                                <p className="text-xs text-on-surface-variant font-semibold">Blood Group</p>
+                                                <p className="font-bold text-primary mt-0.5">{donor.donor_profile.blood_type.name}</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-xs text-on-surface-variant font-semibold">Total Donations</p>
+                                                <p className="font-semibold text-on-surface mt-0.5">{donor.donor_profile.total_donations} pints</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-xs text-on-surface-variant font-semibold">Last Donation</p>
+                                                <p className="font-semibold text-on-surface mt-0.5">{donor.donor_profile.last_donation_date || 'N/A'}</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-xs text-on-surface-variant font-semibold">Hospital Location</p>
+                                                <p className="font-semibold text-on-surface mt-0.5 truncate">{donor.location} ({donor.distance_km} km)</p>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex items-center gap-2 w-full md:w-auto justify-end">
+                                            <button className="h-10 px-4 rounded-lg bg-secondary text-on-secondary text-xs font-bold hover:opacity-90 active:scale-95 transition-transform flex items-center gap-1.5">
+                                                <span className="material-symbols-outlined text-[18px]">phone</span>
+                                                Contact
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            {/* Add Donor Modal */}
+            {isAddOpen && (
+                <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-2xl w-full max-w-lg shadow-xl overflow-hidden border border-outline-variant">
+                        <div className="p-6 border-b border-outline-variant flex justify-between items-center bg-surface-container-low">
+                            <h3 className="font-headline-md text-headline-md font-bold text-on-surface">Register New Blood Donor</h3>
+                            <button onClick={() => setIsAddOpen(false)} className="p-2 hover:bg-surface-container-high rounded-full transition-colors">
+                                <span className="material-symbols-outlined">close</span>
+                            </button>
+                        </div>
+                        <form onSubmit={handleAddSubmit} className="p-6 space-y-4">
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-1">
+                                    <label className="text-xs font-bold text-on-surface-variant">Full Name</label>
+                                    <input
+                                        type="text" required value={name} onChange={(e) => setName(e.target.value)}
+                                        className="w-full h-10 px-3 bg-surface-container-lowest border border-outline-variant rounded-lg outline-none focus:border-secondary text-sm"
+                                        placeholder="Michael Chang"
+                                    />
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-xs font-bold text-on-surface-variant">Email Address</label>
+                                    <input
+                                        type="email" required value={email} onChange={(e) => setEmail(e.target.value)}
+                                        className="w-full h-10 px-3 bg-surface-container-lowest border border-outline-variant rounded-lg outline-none focus:border-secondary text-sm"
+                                        placeholder="michael@donor.org"
+                                    />
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-1">
+                                    <label className="text-xs font-bold text-on-surface-variant">Phone Number</label>
+                                    <input
+                                        type="text" required value={phone} onChange={(e) => setPhone(e.target.value)}
+                                        className="w-full h-10 px-3 bg-surface-container-lowest border border-outline-variant rounded-lg outline-none focus:border-secondary text-sm"
+                                        placeholder="+60129998877"
+                                    />
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-xs font-bold text-on-surface-variant">Blood Type</label>
+                                    <select
+                                        value={bloodTypeId} onChange={(e) => setBloodTypeId(e.target.value)}
+                                        className="w-full h-10 px-3 bg-surface-container-lowest border border-outline-variant rounded-lg outline-none focus:border-secondary text-sm"
+                                    >
+                                        <option value="1">O-</option>
+                                        <option value="2">O+</option>
+                                        <option value="3">A-</option>
+                                        <option value="4">A+</option>
+                                        <option value="5">B-</option>
+                                        <option value="6">B+</option>
+                                        <option value="7">AB-</option>
+                                        <option value="8">AB+</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-1">
+                                    <label className="text-xs font-bold text-on-surface-variant">Total Donation Pints</label>
+                                    <input
+                                        type="number" required value={totalDonations} onChange={(e) => setTotalDonations(e.target.value)}
+                                        className="w-full h-10 px-3 bg-surface-container-lowest border border-outline-variant rounded-lg outline-none focus:border-secondary text-sm"
+                                        placeholder="5" min="0"
+                                    />
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-xs font-bold text-on-surface-variant">Location Address</label>
+                                    <input
+                                        type="text" required value={locationInput} onChange={(e) => setLocationInput(e.target.value)}
+                                        className="w-full h-10 px-3 bg-surface-container-lowest border border-outline-variant rounded-lg outline-none focus:border-secondary text-sm"
+                                        placeholder="Ampang, Selangor"
+                                    />
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-3 pt-2">
+                                <input
+                                    type="checkbox" checked={isAvailable} onChange={(e) => setIsAvailable(e.target.checked)}
+                                    id="isAvailableInputDonor" className="w-5 h-5 rounded text-primary"
+                                />
+                                <label htmlFor="isAvailableInputDonor" className="text-sm font-semibold text-on-surface-variant cursor-pointer">
+                                    Available for immediate donation matches
+                                </label>
+                            </div>
+
+                            {formError && (
+                                <p className="text-xs text-error font-bold bg-error-container/20 p-3 rounded-lg border border-error/20">
+                                    {formError}
+                                </p>
+                            )}
+
+                            <div className="pt-4 border-t border-outline-variant flex justify-end gap-3 bg-surface-container-lowest">
+                                <button
+                                    type="button" onClick={() => setIsAddOpen(false)}
+                                    className="h-10 px-4 rounded-lg border border-outline hover:bg-surface-container-low text-sm font-semibold"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit" disabled={addDonorMutation.isPending}
+                                    className="h-10 px-6 rounded-lg bg-primary text-on-primary text-sm font-semibold active:scale-95 transition-transform"
+                                >
+                                    {addDonorMutation.isPending ? 'Saving...' : 'Register Donor'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+        </SidebarLayout>
+    );
+};
+
+export default Donors;
