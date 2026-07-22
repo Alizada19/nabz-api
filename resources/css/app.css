@@ -6,6 +6,131 @@
 @source '../**/*.js';
 
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+    --font-body-md: 'Inter', sans-serif;
+    --font-headline-lg-mobile: 'Inter', sans-serif;
+    --font-label-md: 'Inter', sans-serif;
+    --font-display-lg: 'Inter', sans-serif;
+    --font-headline-lg: 'Inter', sans-serif;
+    --font-body-lg: 'Inter', sans-serif;
+    --font-mono-sm: 'jetbrainsMono', monospace;
+    --font-headline-md: 'Inter', sans-serif;
+
+    --color-primary: #af101a;
+    --color-on-primary: #ffffff;
+    --color-primary-container: #d32f2f;
+    --color-on-primary-container: #fff2f0;
+    --color-secondary: #005faf;
+    --color-on-secondary: #ffffff;
+    --color-secondary-container: #54a0fe;
+    --color-on-secondary-container: #003567;
+    --color-tertiary: #005f7b;
+    --color-on-tertiary: #ffffff;
+    --color-tertiary-container: #00799c;
+    --color-on-tertiary-container: #e9f7ff;
+    --color-error: #ba1a1a;
+    --color-on-error: #ffffff;
+    --color-error-container: #ffdad6;
+    --color-on-error-container: #93000a;
+    --color-surface: #f8f9ff;
+    --color-on-surface: #0b1c30;
+    --color-surface-variant: #d3e4fe;
+    --color-on-surface-variant: #5b403d;
+    --color-surface-dim: #cbdbf5;
+    --color-surface-bright: #f8f9ff;
+    --color-surface-container-low: #eff4ff;
+    --color-surface-container: #e5eeff;
+    --color-surface-container-high: #dce9ff;
+    --color-surface-container-highest: #d3e4fe;
+    --color-surface-container-lowest: #ffffff;
+    --color-background: #f8f9ff;
+    --color-on-background: #0b1c30;
+    --color-outline: #8f6f6c;
+    --color-outline-variant: #e4beba;
+    --color-surface-tint: #ba1a20;
+    --color-inverse-surface: #213145;
+    --color-inverse-on-surface: #eaf1ff;
+    --color-inverse-primary: #ffb3ac;
+    --color-primary-fixed: #ffdad6;
+    --color-primary-fixed-dim: #ffb3ac;
+    --color-on-primary-fixed: #410003;
+    --color-on-primary-fixed-variant: #930010;
+    --color-secondary-fixed: #d4e3ff;
+    --color-secondary-fixed-dim: #a5c8ff;
+    --color-on-secondary-fixed: #001c3a;
+    --color-on-secondary-fixed-variant: #004786;
+    --color-tertiary-fixed: #bee9ff;
+    --color-tertiary-fixed-dim: #7bd1f8;
+    --color-on-tertiary-fixed: #001f2a;
+    --color-on-tertiary-fixed-variant: #004d65;
+
+    --radius-DEFAULT: 0.25rem;
+    --radius-lg: 0.5rem;
+    --radius-xl: 0.75rem;
+    --radius-full: 9999px;
+
+    --spacing-sidebar-collapsed: 72px;
+    --spacing-sm: 0.5rem;
+    --spacing-max-width: 1440px;
+    --spacing-xs: 0.25rem;
+    --spacing-lg: 1.5rem;
+    --spacing-xl: 2rem;
+    --spacing-gutter: 1.5rem;
+    --spacing-sidebar-width: 260px;
+    --spacing-md: 1rem;
+    --spacing-base: 4px;
+}
+
+@utility text-body-md {
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 400;
+}
+@utility text-headline-lg-mobile {
+    font-size: 20px;
+    line-height: 28px;
+    font-weight: 600;
+}
+@utility text-label-md {
+    font-size: 12px;
+    line-height: 16px;
+    letter-spacing: 0.01em;
+    font-weight: 500;
+}
+@utility text-display-lg {
+    font-size: 36px;
+    line-height: 44px;
+    letter-spacing: -0.02em;
+    font-weight: 700;
+}
+@utility text-headline-lg {
+    font-size: 24px;
+    line-height: 32px;
+    letter-spacing: -0.01em;
+    font-weight: 600;
+}
+@utility text-body-lg {
+    font-size: 16px;
+    line-height: 24px;
+    font-weight: 400;
+}
+@utility text-mono-sm {
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 400;
+    font-family: 'jetbrainsMono', monospace;
+}
+@utility text-headline-md {
+    font-size: 20px;
+    line-height: 28px;
+    font-weight: 600;
+}
+@utility glass-panel {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+}
+@utility glass-card {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(226, 232, 240, 0.8);
 }

@@ -22,6 +22,32 @@ class DonorMatchingService
     ): Collection {
         $compatibleTypeIds = $this->compatibilityService->getCompatibleDonorTypeIds($bloodTypeId);
 
+        if (DB::connection()->getDriverName() === 'sqlite') {
+            $donors = User::query()
+                ->select('users.*')
+                ->join('donor_profiles', 'users.id', '=', 'donor_profiles.user_id')
+                ->whereIn('donor_profiles.blood_type_id', $compatibleTypeIds)
+                ->where('users.role', 'donor')
+                ->where('users.is_available', true)
+                ->where('donor_profiles.available_status', true)
+                ->whereNotNull('users.latitude')
+                ->whereNotNull('users.longitude')
+                ->with(['donorProfile.bloodType'])
+                ->get();
+
+            return $donors->map(function ($donor) use ($latitude, $longitude) {
+                $donor->distance = $this->calculateDistance(
+                    $latitude,
+                    $longitude,
+                    (float) $donor->latitude,
+                    (float) $donor->longitude
+                );
+                return $donor;
+            })->filter(function ($donor) use ($radiusKm) {
+                return $donor->distance <= $radiusKm;
+            })->sortBy('distance')->values();
+        }
+
         return User::query()
             ->select('users.*')
             ->selectRaw(

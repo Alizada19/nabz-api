@@ -19,7 +19,7 @@ class RegisterRequest extends FormRequest
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'phone' => ['required', 'string', 'max:20', 'unique:users'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
-            'role' => ['nullable', Rule::in(['donor', 'seeker'])],
+            'role' => ['nullable', Rule::in(['donor', 'seeker', 'admin', 'coordinator'])],
             'latitude' => ['nullable', 'numeric', 'between:-90,90'],
             'longitude' => ['nullable', 'numeric', 'between:-180,180'],
             'location' => ['nullable', 'string', 'max:255'],
