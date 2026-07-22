@@ -1,58 +1,113 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Hemoglobin Admin - Blood Donation & Logistics Management System
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Hemoglobin Admin is a clinical logistics and donor management portal. It integrates a secure, modern React + TypeScript single-page application (SPA) directly into a Laravel 13.5 REST API backend, providing dynamic stats visualizations, live donor geolocation matches, real-time clinical notifications, and administrative tracking.
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Technical Stack
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+- **Backend:** Laravel 13.5 (REST API, Sanctum Token Auth, SQLite/MySQL support)
+- **Frontend:** React 19, TypeScript, Axios, React Query (TanStack), Tailwind CSS, Vite
+- **Iconography & Styling:** Google Material Symbols, Custom cool clinical neutral slate palettes (VitalFlow Design System)
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+---
 
-## Learning Laravel
+## Installation & Setup
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+Follow these steps sequentially to setup and run the Hemoglobin portal locally:
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### 1. Prerequisites
+Ensure you have the following installed on your machine:
+- PHP >= 8.3
+- Composer
+- NodeJS >= 20
+- npm (or yarn / bun)
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+### 2. Backend Installation (Laravel API)
+1. Clone the repository and navigate into the project directory:
+   ```bash
+   cd nabz-api
+   ```
+2. Install PHP dependencies:
+   ```bash
+   composer install
+   ```
+3. Copy environment configuration:
+   ```bash
+   cp .env.example .env
+   ```
+4. Configure database in `.env`. By default, we support a lightweight SQLite database for testing, but you can connect MySQL or PostgreSQL:
+   ```env
+   DB_CONNECTION=sqlite
+   DB_DATABASE=database/database.sqlite
+   ```
+   *Note: If using SQLite, create an empty file inside `database/` named `database.sqlite`:*
+   ```bash
+   touch database/database.sqlite
+   ```
+5. Generate application key:
+   ```bash
+   php artisan key:generate
+   ```
+6. Run migrations and seed tables:
+   ```bash
+   php artisan migrate --seed
+   ```
+7. Start local Laravel dev server:
+   ```bash
+   php artisan serve
+   ```
+   The backend API will be running at `http://127.0.0.1:8000/`.
 
-## Agentic Development
+---
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+### 3. Frontend Setup (React SPA)
+1. Install Node.js packages:
+   ```bash
+   npm install
+   ```
+2. Build frontend assets for production:
+   ```bash
+   npm run build
+   ```
+   Or start the live hot-reload development server:
+   ```bash
+   npm run dev
+   ```
 
+---
+
+## Application Usage Guide
+
+### 1. Secure Authentication Login
+- Direct your browser to `http://127.0.0.1:8000/login`.
+- **Default Administrative Credentials:**
+  - **Email:** `admin@nabz.com`
+  - **Password:** `password`
+- Security interceptors will issue a secure Sanctum mobile API token and persist session context inside `localStorage`.
+
+### 2. Live Clinical Modules
+
+Once logged in, the left-hand navigation sidebar enables administrative access over all core entities:
+
+- **Dashboard:** Instantly view active metrics widgets (Total users, registered donors, available donors, urgent active requests) mapped alongside clinical monthly request trend metrics.
+- **Users Management:** Fully searchable tabular listing of clinical administrators, doctors, and users. Supports creating new personnel records with built-in validation states.
+- **Donors Directory:** Integrated geolocated matching of blood donors using coordinates. View donor status badges, contact numbers, blood group type, and distance mapping in kilometers.
+- **Blood Requests:** View active blood needs, urgency levels, hospital locations, and trigger state modifications (e.g., Approve request, complete, or cancel clinical requisitions).
+- **Notifications & Profile Settings:** Access clinical alerts or customize personal blood type, coordinates, and match readiness parameters dynamically.
+
+---
+
+## Production Builds and Troubleshooting
+
+### Compilation Errors
+If you run into missing module errors during `npm run build`, make sure you have installed standard router and query libraries:
 ```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+npm install react-router-dom axios @tanstack/react-query lucide-react
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
-
-## Contributing
-
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
-
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+### Reset Database Seeds
+If you wish to refresh and recreate baseline clinical statistics:
+```bash
+php artisan migrate:fresh --seed
+```
