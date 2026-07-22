@@ -13,6 +13,11 @@ export default defineConfig({
         tailwindcss(),
     ],
     server: {
+        host: '0.0.0.0', // Allows network connections
+        port: 5173,
+        strictPort: true,
+        origin: 'http://192.168.135.50:5173', // Force Laravel to request Vite assets from your LAN IP
+        cors: true,
         watch: {
             ignored: ['**/storage/framework/views/**'],
         },
