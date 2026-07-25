@@ -10,6 +10,9 @@ import Donors from './pages/Donors.tsx';
 import BloodRequests from './pages/BloodRequests.tsx';
 import Notifications from './pages/Notifications.tsx';
 import Settings from './pages/Settings.tsx';
+import BloodTypes from './pages/BloodTypes.tsx';
+import Reports from './pages/Reports.tsx';
+import Profile from './pages/Profile.tsx';
 
 const queryClient = new QueryClient({
     defaultOptions: {
@@ -37,8 +40,11 @@ const App: React.FC = () => {
                             <Route path="/users" element={<Users />} />
                             <Route path="/donors" element={<Donors />} />
                             <Route path="/blood-requests" element={<BloodRequests />} />
+                            <Route path="/blood-types" element={<BloodTypes />} />
                             <Route path="/notifications" element={<Notifications />} />
+                            <Route path="/reports" element={<Reports />} />
                             <Route path="/settings" element={<Settings />} />
+                            <Route path="/profile" element={<Profile />} />
                         </Route>
 
                         {/* Catch-all */}

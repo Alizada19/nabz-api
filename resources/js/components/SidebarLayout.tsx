@@ -28,22 +28,30 @@ export const SidebarLayout: React.FC<LayoutProps> = ({ children }) => {
         { name: 'Donors', icon: 'volunteer_activism', path: '/donors' },
         { name: 'Seekers', icon: 'person_search', path: '/users?role=seeker' },
         { name: 'Blood Requests', icon: 'bloodtype', path: '/blood-requests' },
-        { name: 'Blood Types', icon: 'opacity', path: '/settings' },
+        { name: 'Blood Types', icon: 'opacity', path: '/blood-types' },
         { name: 'Notifications', icon: 'notifications', path: '/notifications' },
-        { name: 'Reports', icon: 'assessment', path: '/' },
+        { name: 'Reports', icon: 'assessment', path: '/reports' },
     ];
 
     const bottomNavigationItems = [
         { name: 'Settings', icon: 'settings', path: '/settings' },
-        { name: 'Profile', icon: 'account_circle', path: '/settings' },
+        { name: 'Profile', icon: 'account_circle', path: '/profile' },
     ];
 
     const isActive = (path: string) => {
-        const currentPath = location.pathname + location.search;
-        if (path === '/') {
-            return currentPath === '/';
+        const currentPathname = location.pathname;
+        const currentSearch = location.search;
+
+        if (path.includes('?')) {
+            const [basePath, searchStr] = path.split('?');
+            return currentPathname === basePath && currentSearch === `?${searchStr}`;
         }
-        return currentPath.startsWith(path);
+
+        if (path === '/users') {
+            return currentPathname === '/users' && currentSearch !== '?role=seeker';
+        }
+
+        return currentPathname === path;
     };
 
     return (
@@ -58,7 +66,7 @@ export const SidebarLayout: React.FC<LayoutProps> = ({ children }) => {
                         <Link
                             key={item.name}
                             to={item.path}
-                            className={`flex items-center gap-3 px-4 py-3 transition-colors duration-200 ease-in-out ${
+                            className={`flex items-center gap-3 px-4 py-3 transition-colors duration-200 ease-in-out rounded-lg ${
                                 isActive(item.path)
                                     ? 'bg-surface-container-highest text-primary border-l-4 border-primary font-semibold'
                                     : 'text-on-surface-variant hover:bg-surface-container-low'
@@ -73,7 +81,7 @@ export const SidebarLayout: React.FC<LayoutProps> = ({ children }) => {
                             <Link
                                 key={item.name}
                                 to={item.path}
-                                className={`flex items-center gap-3 px-4 py-3 transition-colors duration-200 ease-in-out ${
+                                className={`flex items-center gap-3 px-4 py-3 transition-colors duration-200 ease-in-out rounded-lg ${
                                     isActive(item.path)
                                         ? 'bg-surface-container-highest text-primary border-l-4 border-primary font-semibold'
                                         : 'text-on-surface-variant hover:bg-surface-container-low'
@@ -169,7 +177,7 @@ export const SidebarLayout: React.FC<LayoutProps> = ({ children }) => {
                     <button className="p-2 hover:bg-surface-container-low rounded-full transition-transform active:scale-95">
                         <span className="material-symbols-outlined">search</span>
                     </button>
-                    <Link to="/settings" className="flex items-center gap-2 px-3 py-1.5 hover:bg-surface-container-low rounded-full transition-transform active:scale-95 border border-outline-variant">
+                    <Link to="/profile" className="flex items-center gap-2 px-3 py-1.5 hover:bg-surface-container-low rounded-full transition-transform active:scale-95 border border-outline-variant">
                         <img
                             className="w-7 h-7 rounded-full object-cover"
                             alt="A professional headshot of a senior medical administrator"
