@@ -5,6 +5,8 @@ use App\Http\Controllers\Api\BloodRequestController;
 use App\Http\Controllers\Api\DonorController;
 use App\Http\Controllers\Api\DonorProfileController;
 use App\Http\Controllers\Api\NotificationController;
+use App\Http\Controllers\Api\DashboardController;
+use App\Http\Controllers\Api\UserController;
 use Illuminate\Support\Facades\Route;
 
 // Public routes
@@ -31,8 +33,16 @@ Route::middleware('auth:sanctum')->group(function () {
     // Donors
     Route::get('/donors/nearby', [DonorController::class, 'nearby']);
 
+    // Users CRUD Management
+    Route::get('/users', [UserController::class, 'index']);
+    Route::put('/users/{user}', [UserController::class, 'update']);
+    Route::delete('/users/{user}', [UserController::class, 'destroy']);
+
     // Notifications
     Route::get('/notifications', [NotificationController::class, 'index']);
     Route::patch('/notifications/{notification}/read', [NotificationController::class, 'markAsRead']);
     Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead']);
+
+    // Dashboard Analytics
+    Route::get('/dashboard-stats', [DashboardController::class, 'stats']);
 });
